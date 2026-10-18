@@ -1,0 +1,129 @@
+/ =====================================================================
+// 52weeksBI · Rapport n°2 : La RDC rattrape-t-elle ses voisins ?
+// Requêtes Power Query (langage M) pour charger les données de la
+// Banque mondiale (World Development Indicators) via son API publique.
+//
+// Comment les utiliser dans Power BI Desktop :
+//   Accueil > Obtenir les données > Requête vide > Éditeur avancé,
+//   puis coller le code de la requête voulue et cliquer sur Terminé.
+//   Si Power BI demande des informations d'identification : Anonyme.
+// =====================================================================
+ 
+ 
+// ---------------------------------------------------------------------
+// REQUÊTE 1 : Brut_API
+// Charge les 7 indicateurs pour les 10 pays, de 2010 à 2023.
+// Résultat : une table au format long, avec les colonnes
+//   Code_Indicateur, Indicateur, Pays, Code_Pays, Année, Valeur
+// À renommer "Brut_API". Décocher "Activer le chargement" (source seule).
+// ---------------------------------------------------------------------
+let
+    // Pays : RDC (COD) et ses 9 voisins, codes ISO à 3 lettres
+    Pays = "COD;AGO;BDI;COG;ZMB;TZA;UGA;RWA;SSD;CAF",
+ 
+    // Indicateurs de la base World Development Indicators
+    Indicateurs = {
+        "NY.GDP.PCAP.CD",   // PIB par habitant (US$ courants)
+        "SP.DYN.LE00.IN",   // Espérance de vie à la naissance (années)
+        "EG.ELC.ACCS.ZS",   // Accès à l'électricité (% population)
+        "IT.NET.USER.ZS",   // Utilisateurs d'Internet (% population)
+        "SP.POP.TOTL",      // Population totale (habitants)
+        "SP.DYN.IMRT.IN",   // Mortalité infantile (pour 1 000 naissances)
+        "SH.H2O.BASW.ZS"    // Accès à l'eau potable de base (% population)
+    },
+ 
+    // Fonction : appelle l'API pour un indicateur et renvoie une table
+    Charger = (code as text) as table =>
+        let
+            Url = "https://api.worldbank.org/v2/country/" & Pays & "/indicator/" & code
+                  & "?format=json&date=2010:2023&per_page=1000",
+            Brut = Json.Document(Web.Contents(Url)),
+            Lignes = Brut{1},   // l'élément 0 contient les métadonnées, le 1 les valeurs
+            T = Table.FromList(Lignes, Splitter.SplitByNothing(), {"Ligne"}),
+            E = Table.ExpandRecordColumn(T, "Ligne",
+                    {"indicator", "country", "countryiso3code", "date", "value"},
+                    {"ind", "pays", "Code_Pays", "Année", "Valeur"}),
+            E1 = Table.ExpandRecordColumn(E, "ind", {"id", "value"}, {"Code_Indicateur", "Indicateur"}),
+            E2 = Table.ExpandRecordColumn(E1, "pays", {"value"}, {"Pays"})
+        in
+            E2,
+ 
+    // On appelle la fonction pour chaque indicateur, puis on assemble
+    Tout = Table.Combine(List.Transform(Indicateurs, Charger)),
+    Types = Table.TransformColumnTypes(Tout, {{"Année", Int64.Type}, {"Valeur", type number}})
+in
+    Types
+ 
+ 
+// ---------------------------------------------------------------------
+// REQUÊTE 2 : Faits_Indicateurs  (table de faits)
+// Faire : clic droit sur Brut_API > Référence, renommer en Faits_Indicateurs,
+// puis Choisir les colonnes : Code_Indicateur, Code_Pays, Année, Valeur.
+// Contrôle : 980 lignes (7 indicateurs x 10 pays x 14 ans).
+// Ne jamais remplacer les valeurs vides par 0.
+// ---------------------------------------------------------------------
+ 
+ 
+// ---------------------------------------------------------------------
+// REQUÊTE 3 : Pays  (dimension)
+// Faire : clic droit sur Brut_API > Référence, renommer en Pays,
+// puis garder Code_Pays et Pays, Supprimer les doublons (10 lignes).
+// Renommer la colonne Pays en Nom, traduire les noms (Remplacer les valeurs),
+// et ajouter une colonne conditionnelle Groupe :
+//   si Code_Pays = "COD" alors "RDC", sinon "Voisin".
+//
+// Traductions utilisées :
+//   Congo, Dem. Rep.          -> RDC
+//   Congo, Rep.               -> Congo
+//   Central African Republic  -> République centrafricaine
+//   South Sudan               -> Soudan du Sud
+//   Tanzania                  -> Tanzanie
+//   Uganda                    -> Ouganda
+//   Zambia                    -> Zambie
+// ---------------------------------------------------------------------
+ 
+ 
+// ---------------------------------------------------------------------
+// REQUÊTE 4 : Indicateurs  (dimension)
+// Faire : Accueil > Entrer des données, coller le tableau ci-dessous
+// (séparateur : tabulation), et nommer la table "Indicateurs".
+//
+// Code_Indicateur   Nom                              Unité                   Sens
+// NY.GDP.PCAP.CD    PIB par habitant                 US$ courants            Plus haut = mieux
+// SP.DYN.LE00.IN    Espérance de vie                 Années                  Plus haut = mieux
+// EG.ELC.ACCS.ZS    Accès à l'électricité            % population            Plus haut = mieux
+// IT.NET.USER.ZS    Utilisateurs d'Internet          % population            Plus haut = mieux
+// SP.POP.TOTL       Population totale                Habitants               Contexte
+// SP.DYN.IMRT.IN    Mortalité infantile              Pour 1 000 naissances   Plus bas = mieux
+// SH.H2O.BASW.ZS    Accès à l'eau potable de base    % population            Plus haut = mieux
+//
+// Le Code_Indicateur doit être identique, caractère pour caractère,
+// à celui de la requête Brut_API.
+// ---------------------------------------------------------------------
+ 
+ 
+// ---------------------------------------------------------------------
+// REQUÊTE 5 : Calendrier  (dimension)
+// Une ligne par année, de 2010 à 2023 (14 années).
+// ---------------------------------------------------------------------
+let
+    Source = Table.FromColumns({List.Numbers(2010, 14)}, {"Année"}),
+    Types = Table.TransformColumnTypes(Source, {{"Année", Int64.Type}})
+in
+    Types
+ 
+ 
+// ---------------------------------------------------------------------
+// RELATIONS À CRÉER (vue Modèle), un à plusieurs, filtre de la dimension
+// vers la table de faits :
+//   Pays[Code_Pays]                  -> Faits_Indicateurs[Code_Pays]
+//   Indicateurs[Code_Indicateur]     -> Faits_Indicateurs[Code_Indicateur]
+//   Calendrier[Année]                -> Faits_Indicateurs[Année]
+//
+// NOTES
+//   - Source : Banque mondiale, World Development Indicators, API publique.
+//   - Les valeurs sont révisées de temps en temps : noter la date de
+//     chargement dans le README.
+//   - Les années sans donnée arrivent avec une valeur vide (null) :
+//     c'est ce qui permet de mesurer la couverture des données.
+// ---------------------------------------------------------------------
