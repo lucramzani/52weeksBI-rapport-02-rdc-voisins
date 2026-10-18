@@ -4,11 +4,7 @@
 
 > Rapport interactif de 3 pages qui compare la République démocratique du Congo à ses 9 voisins sur 7 indicateurs de développement, de 2010 à 2023, à partir des données publiques de la Banque mondiale.
 
-**Démonstration vidéo** : [lien vers la vidéo]
-**Rapport en ligne** : [lien vers le rapport publié, si disponible]
 **Auteur** : Lucien Ramazani Kabobo, Data Analyst et formateur Microsoft Power BI
-
-![Page 1 : vue comparative](docs/page1.png)
 
 ---
 
@@ -25,22 +21,6 @@ Une organisation internationale prépare une note d'orientation sur le développ
 3. L'écart avec les voisins se réduit-il, et à quel rythme ?
 4. Quelle est la fiabilité des données (années manquantes, estimations) ?
 
-## 3. Principaux résultats
-
-> À compléter avec vos résultats réels avant de publier.
-
-| Indicateur | Valeur RDC | Moyenne des voisins | Écart | Rang (sur 10) |
-|---|---|---|---|---|
-| [Indicateur 1] | [XX] | [XX] | [± X %] | [N] |
-| [Indicateur 2] | [XX] | [XX] | [± X %] | [N] |
-| [Indicateur 3] | [XX] | [XX] | [± X %] | [N] |
-
-**Constats clés**
-
-- [Constat 1 : par exemple, sur l'accès à l'électricité, la RDC est classée Ne sur 10, avec X % de la moyenne de ses voisins.]
-- [Constat 2 : l'écart avec les voisins se réduit / se creuse sur ... : X % de la moyenne en 2010, Y % en 2023.]
-- [Constat 3 : l'indicateur sur lequel la RDC progresse le plus vite, ou le plus lentement.]
-
 Pour les indicateurs où plus bas est mieux (mortalité infantile), le rang est calculé en tenant compte du sens de lecture : 1 = meilleur.
 
 ## 4. Pages du rapport
@@ -55,7 +35,7 @@ Chaque titre de page est un constat qui s'adapte à l'indicateur choisi (mesures
 
 ## 5. Données
 
-**Source** : Banque mondiale, World Development Indicators, chargées via l'API publique (voir `docs/requete_API.txt`). Date de chargement : [jj/mm/aaaa]. Licence d'utilisation : à vérifier sur le site de la Banque mondiale (catalogue de données ouvertes).
+**Source** : Banque mondiale, World Development Indicators, chargées via l'API publique (voir `docs/requete_API.txt`). Date de chargement : [18/10/2026]. Licence d'utilisation : à vérifier sur le site de la Banque mondiale (catalogue de données ouvertes).
 
 **Pays (10)** : RDC (COD), Angola (AGO), Burundi (BDI), Congo (COG), Zambie (ZMB), Tanzanie (TZA), Ouganda (UGA), Rwanda (RWA), Soudan du Sud (SSD), République centrafricaine (CAF).
 
@@ -157,6 +137,6 @@ Chargement de données via une API JSON (Power Query) · Fonction M et requête 
 
 **52weeksBI** : un rapport Power BI publié chaque semaine, pour transformer des données en décisions.
 
-Lucien Ramazani Kabobo · [LinkedIn] · [Contact]
+Lucien Ramazani Kabobo · www.linkedin.com/in/lucien-ramazani-kabobo · ramazanilucien2601@gmail.com
 
 *Projet réalisé à des fins de démonstration et de formation. Les données proviennent de la Banque mondiale ; l'interprétation reste celle de l'auteur.*
